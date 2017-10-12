@@ -1,0 +1,141 @@
+main() begin...
+ManageWebServerConnections() ::ResolveUDPAddr()  Listening For WebRequests on Port  55057
+ProcessBoardData()  Calling ResolveUDPAddr()  Using Port  55056
+ManageWebServerConnections()  Calling ListenUDP()
+ProcessBoardData()  Calling ListenUDP()
+ProcessBoardData()  Wait For In Coming Board Data
+FormatAndQueueData() Wait For Board Data...
+ManageWebServerConnections() Listening For Connections....
+ProcessBoardData() Receiving Data From Board!
+FormatAndQueueData() Processing Board Data...
+SendDataToWebServer() Processing JSON Messages...
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 0
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  55058
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55058
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55058
+SetNextWebCon() WebCon Structure Set.  Port-> 55058
+HELLO Reply:  HIYA,55058  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55058 from 192.168.1.50:55057
+CONFIRM Received from Port:  55058
+SetStatusToReceiveData  CONFIRMED Received From Browser 55058
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55058 <-
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [0 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 1
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  1  Port:  55059
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55059
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55059
+SetNextWebCon() WebCon Structure Set.  Port-> 55059
+HELLO Reply:  HIYA,55059  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55059 from 192.168.1.50:55057
+CONFIRM Received from Port:  55059
+SetStatusToReceiveData  CONFIRMED Received From Browser 55059
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData  Checking WebCon Port: 55059
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55059 <-
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [0 0 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 2
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  1  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  2  Port:  55060
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55060
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55060
+SetNextWebCon() WebCon Structure Set.  Port-> 55060
+HELLO Reply:  HIYA,55060  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55060 from 192.168.1.50:55057
+CONFIRM Received from Port:  55060
+SetStatusToReceiveData  CONFIRMED Received From Browser 55060
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData  Checking WebCon Port: 55059
+SetStatusToReceiveData  Checking WebCon Port: 55060
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55060 <-
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [0 0 0 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 3
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  1  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  2  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  3  Port:  55061
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55061
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55061
+SetNextWebCon() WebCon Structure Set.  Port-> 55061
+HELLO Reply:  HIYA,55061  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55061 from 192.168.1.50:55057
+CONFIRM Received from Port:  55061
+SetStatusToReceiveData  CONFIRMED Received From Browser 55061
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData  Checking WebCon Port: 55059
+SetStatusToReceiveData  Checking WebCon Port: 55060
+SetStatusToReceiveData  Checking WebCon Port: 55061
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55061 <-
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [0 0 0 0 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 4
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  1  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  2  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  3  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  4  Port:  55062
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55062
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55062
+SetNextWebCon() WebCon Structure Set.  Port-> 55062
+HELLO Reply:  HIYA,55062  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55062 from 192.168.1.50:55057
+CONFIRM Received from Port:  55062
+SetStatusToReceiveData  CONFIRMED Received From Browser 55062
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData  Checking WebCon Port: 55059
+SetStatusToReceiveData  Checking WebCon Port: 55060
+SetStatusToReceiveData  Checking WebCon Port: 55061
+SetStatusToReceiveData  Checking WebCon Port: 55062
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55062 <-
+ReCycleConnection() Time Out! 192.168.1.50 : 55061  Index:  3
+ManageWebServerConnections() Received: HELLO    from 192.168.1.50:55057
+SetNextWebCon()         Base Ports Set At: [55058 55059 55060 55061 55062 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon() Base Ports After Clean Up: [0 0 0 55061 0 55063 55064 55065 55066 55067 55068 55069 55070 55071 55072 55073 55074 55075 55076 55077]
+SetNextWebCon()  WebCon Structure Index: 3
+SetNextWebCon()  WebCon Status Of Ports - Index:  0  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  1  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  2  Port:  0
+SetNextWebCon()  WebCon Status Of Ports - Index:  3  Port:  55061
+SetNextWebCon()  Calling ResolveUDPAddr()  Using Port  55061
+SetNextWebCon()  Calling ListenUDP()
+SetNextWebCon() Changing Port From-> 0 <- To:  55061
+SetNextWebCon() WebCon Structure Set.  Port-> 55061
+HELLO Reply:  HIYA,55061  Sent To IP/Port:  192.168.1.50:55057
+ManageWebServerConnections() Received: CONFIRM ,55061 from 192.168.1.50:55057
+CONFIRM Received from Port:  55061
+SetStatusToReceiveData  CONFIRMED Received From Browser 55061
+SetStatusToReceiveData  Checking WebCon Port: 55058
+SetStatusToReceiveData  Checking WebCon Port: 55059
+SetStatusToReceiveData  Checking WebCon Port: 55060
+SetStatusToReceiveData  Checking WebCon Port: 55061
+SetStatusToReceiveData WebCon Set and Ready to Process Data
+SendDataToWebServer() Sending Data To-> 192.168.1.50 : 55061 <-
+ReCycleConnection() Time Out! 192.168.1.50 : 55059  Index:  1
+ReCycleConnection() Time Out! 192.168.1.50 : 55061  Index:  3
+ReCycleConnection() Time Out! 192.168.1.50 : 55062  Index:  4
+ReCycleConnection() Time Out! 192.168.1.50 : 55058  Index:  0
+ReCycleConnection() Time Out! 192.168.1.50 : 55060  Index:  2
+exit status 2
+Terminate batch job (Y/N)? y
