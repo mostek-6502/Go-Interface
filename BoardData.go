@@ -19,11 +19,17 @@ import (
 )
 
 
-func ProcessBoardData(ChanChannelData chan<- string, sPort string) (bool, string) {
+func ProcessBoardData(ChannelBoardData chan<- string, sPort string) (bool, string) {
 
 	var sData string
 	var sError string
 	var sPlace string = "ProcessBoardData()"
+
+	var iSkippedData int
+	var iProcessedData int
+	var iIgnoreTheNextMessages int
+
+	tHold := time.Now()
 
 	fmt.Println(sPlace, " Calling ResolveUDPAddr()  Using Port ", sPort)
 
@@ -77,21 +83,52 @@ func ProcessBoardData(ChanChannelData chan<- string, sPort string) (bool, string
 			}
 
 		} else {
-			// The problem with this is this...  once we go into a 'full' state,
-			// we can can easily begin dropping incoming board data.  This is an issue.
-			// However, if we do not do this, we will the fill channel and ignore data anyway
-			// By doing it this way, a full message is accepted.  Various whole messages
-			// may get dropped by the O/S.  Since the data is not critical, some data loss
-			// is expected.
+			// this is the 4th iteration of throttling the queue... funness...
+			// data is coming out much faster than can be processed
+			// the browser is also having issues dealing with this.
+			// ... screen updates are very slow because of the flood of JSON messages.
+			// For this application, data loss is inevitable... not so with the fat clients.
+			// so... I kept the inbound queue very very small... in fact, there is
+			// only room for two distinct group of messages.
+			// once we hit max, which is basically 12, the next set of messages are ignored.
+			// this a group is ignored and you avoid the possibility of one set being continuously ignored.
 
-			for len(ChanChannelData) >= MAX_CHANNELS {
-				time.Sleep(time.Millisecond)
+			if ActiveWebConnections() == true {
+				if len(ChannelBoardData) >= MAX_CHANNELS_BOARD {
+					iIgnoreTheNextMessages = MAX_DISTINCT_MESSAGES
+				} else {
+					if len(ChannelBoardData) < MAX_CHANNELS_BOARD {
+						if iIgnoreTheNextMessages == 0 {
+							iProcessedData++
+							ChannelBoardData <- sData
+						} else {
+							iSkippedData++
+							iIgnoreTheNextMessages--
+						}
+					}
+				}
 			}
-
-			ChanChannelData <- sData
-
-			//fmt.Println(sPlace, " ***After Board Insert: ", len(ChanChannelData))
 		}
+
+		// send out a performance message every 15 seconds....
+		tNow := time.Now()
+		if tNow.Sub(tHold).Seconds() >= 15 {
+			var fS float64 = float64(iSkippedData) / 15.00
+			var fP float64 = float64(iProcessedData) / 15.00
+			var fT float64 = float64(iProcessedData + iSkippedData) / 15.00
+
+
+			sTemp := fmt.Sprintf("MESSAGE ,Skipped: %d  Skip/Sec %.2f *** Processed: %d  Processed/Sec %.2f *** Total: %d  Total/Sec: %.2f *** JSON Sent: ",
+						iSkippedData, fS, iProcessedData, fP, iSkippedData + iProcessedData, fT)
+
+			ChannelBoardData <- sTemp
+
+			iSkippedData = 0
+			iProcessedData = 0
+
+			tHold = time.Now()
+		}
+
 
 		time.Sleep(time.Millisecond)
 	}

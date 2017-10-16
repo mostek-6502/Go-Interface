@@ -9,7 +9,7 @@
 //
 // In this case, the web browser is running a Python script in SSE mode for the browser.
 //
-// This program has four parts running concurrently.
+// This program has four parts that run concurrently.
 // 1. Communication with Controller
 //    Handles a handshake with the IoT controller board.
 //    Takes the incoming traffic and puts it into a Channel
@@ -17,17 +17,17 @@
 //    A. Takes the Board data off of the channel,  IE.
 //    B.1 Breaks each element up into discreet JSON messages
 //    B.2 While each message is being broken up into discreet elements,
-//        parts of the data are changed from Status Codes to Readbale Text
+//        parts of the data are changed from Status Codes to Readable Text
 //       Ex.
 //         "WINDSTAT",2,33,44  is broken up into:
 //             JSON { "Element: Header", "Data: WINDSTAT"	}
 //             JSON { "Element: Speed", "Data: 2"			}
 //             JSON { "Element: Status", "Data: OK"			}
 //             JSON { "Element: Direction", "Data: NNW"		}
-//          The down stream Python script simply takes the preformaated JSON message and
+//          The down stream Python script simply takes the preformatted JSON message and
 //          sends it to the browser
-//    C. Each JSON Message is loaded onto a JSON Channel
-// 3. Web Browser Connections
+//    C. From here, each JSON Message is loaded onto a JSON Channel
+// 3. Web Browser Connections Initiated by Python
 //    This program limits browser connections to 10, utilizing up to 20 ports from a predefined list.
 //    Once a connection is made on a PREDEFINED port, a simple hand shake ensues.
 //    Python Sends -> HELLO
@@ -40,36 +40,34 @@
 //    From here, all UDP communications move to 55058
 //    This program keeps a running list of connected Browsers
 //    The reason for the port change is to only allow hand shakes on the predefined port.
+//    When multiple browsers are connected, it'll be too much data for one port to handle.
 //        One port can not handle ALL of the two way traffice from multiple browsers.
 //        This allowed an easier way to identify what was connected
-// 4. Python to Browser via JSON message
+// 4. Channel to Python to Browser via JSON message
 //    The final function removes data from the JSON Channel and iterates
 //    through the list of connected browsers.  Once an active browser is
 //    discovered, the JSON message is sent to that browser.  Thus, if 8
-//    browsers ar on the active list, the message is sent 8 times.
+//    browsers are on the active list, the message is sent 8 times.
 //
 // Current Issues
 // 1. Color Needs to be added to the JSON message.. IE. Statuses of Green = OK, Yellow = Caution, Red = Alert
-// 2. Add Pass through functionality from the Browser to the Board (and back) for configuration
+// 2. The current color scheme is pre-beta
+// 3. Add Pass through functionality from the Browser to the Board (and back) for configuration
 //    purposes.  For instance, allow the browser to update the Temperature resolution from 9 to 11 (for instance)
 //    Report from the Board a 'pending' update to the browser.  The browser can either finalize the update
 //    or allow the board to be rebooted and reset back to original settings
-// 3. Conplete the minor status conversions for eacn message.  IE. Convert data elements such as "0" to "OK"
-// 4. If all of the ports are in use, do we
+// $. If all of the ports are in use, do we
 // 		a. Open a connection to the browser
 //		b. send a JSON alert message and close the port out?
 //		Since this is a specialy application, the need for more than 20 open browsers is small
 //		This is a low priority item.
 // 5. Validate / Verify End to End Data Loss
-//		a. board - indicates how much data is being sent
-//			the high level board data should be normalized to individual JSON message counts
-//		b. intbb - indicates how many messages are being sent to python
-//			i. track channel insertion JSON messages need to be created along with
-//			ii. track channel delete messages and send JSON accordingly
-//		c. a & b need to be measured over time and load -> for instance how many browser sessions are active
-//		d. Python script needs to forumate it's own JSON message indicating sent message
-//		e. accumulate all in the browser.
-//		Since retining every piece of data is not critical this is a lower priority item.
+//      This is somewhat problematc because the queue depth is really really tight.
+//      With this in mind, data loss is inevitable.
+//      The other factor in this related to board queue depth is browser responsiveness
+//      The browser can easily bog down on all of the data being sent to it.
+//      The ONLY message to be added is one from the Python script adding to the current MESSAGE.
+//      Although the message looks sloppy, everything is in one place.
 
 
 package main
@@ -81,7 +79,9 @@ import (
 )
 
 
-const MAX_CHANNELS int = 2000
+const MAX_DISTINCT_MESSAGES = 6		// there is one particular message added every 30 seconds.  Technicall, this is 7.
+const MAX_CHANNELS_BOARD int = 18
+const MAX_CHANNELS_BROWSER int = 500  // this is essentially 25x's bigger than the BOARD queue due to message expansion
 
 var wg sync.WaitGroup
 
@@ -89,39 +89,29 @@ func main() {
 
 	fmt.Println("main() begin...")
 
-
 	wg.Add(4)
-	//kaprekar()
 
-	ChanChannelData := make(chan string, MAX_CHANNELS)
-	// ChanBrowserConnects := make(chan string)
-	ChanBrowserRequests := make(chan string, MAX_CHANNELS)
+	// the input channel creates a LOT of data for the output channel
+	ChannelBoardData := make(chan string, MAX_CHANNELS_BOARD)
+	// there are six distinct messages that come out of the board.
+	// on average there are 22 JSON messages created for each board message
+	ChannelBrowserData := make(chan string, MAX_CHANNELS_BROWSER)
 
 	sPort := "55056"
 
-	// these small conditionals allow for and easy on/off for any given process
-
 	// this 'thread' maintains the list of connected browsers and their ports.
-	sJunk := "0"
-	if sJunk == "0" { go ManageWebServerConnections(sPort) }
+	go ManageWebServerConnections(sPort)
 
 	// this 'thread' connects to the board and inserts the data into a queue
-	sJunk = "1"
-	if sJunk == "1" { go ProcessBoardData(ChanChannelData, sPort) }
+	go ProcessBoardData(ChannelBoardData, sPort)
 
 	// this takes the channel data, formats it to JSON and maintains a data queue for browser requests
-	sJunk = "2"
-	if sJunk == "2" { go FormatAndQueueData(ChanChannelData, ChanBrowserRequests) }
+	go FormatAndQueueData(ChannelBoardData, ChannelBrowserData)
 
 	// although we send the sPort for the Baord listen, by default, we'll add 1 to the Port number for the web data
-	sJunk = "3"
-	if sJunk == "3" { go SendDataToWebServer(ChanBrowserRequests) }
+	go SendDataToWebServer(ChannelBrowserData)
 
 	wg.Wait()
-	// handle browser requests
-	//ProcessBrowserRequests(ChanBrowserRequests)
-
-	// ok, so the next go routine should convert the data to a JSON type
 
 	os.Exit(1)
 

@@ -62,7 +62,30 @@ type WebServer_Connections struct {
 
 var webConnections = make([]WebServer_Connections, 10)
 
+var bWebConnectDisplayFlag = true
 
+func ActiveWebConnections() bool {
+
+	var sPlace string = "ActiveWebConnections()"
+
+	for iWCIdx := range webConnections {
+		if webConnections[iWCIdx].iStatus == 2 {
+			if bWebConnectDisplayFlag == true {
+				fmt.Println(sPlace, "Active Web Connections!  Allow The Queues To Start Filling!")
+				bWebConnectDisplayFlag = false
+			}
+
+			return true
+		}
+	}
+
+	if bWebConnectDisplayFlag == false {
+		fmt.Println(sPlace, "No Active Web Connections.  Drain The Queues!")
+		bWebConnectDisplayFlag = true
+	}
+
+	return false
+}
 
 func SetStatusToReceiveData(sIP string, iPort int) {
 
@@ -409,17 +432,42 @@ func CheckAndUpdateRunning(iWebConIdx int) {
 }
 
 
-func SendDataToWebServer(ChanBrowserRequests <-chan string) {
+func SendDataToWebServer(ChannelBrowserData <-chan string) {
 
 	var sPlace string = "SendDataToWebServer()"
 	var iCount int
 	var bFirstTime bool = true
 	var sJSONData string
+	var iJSONMessagesSent int
+	var iJSONIndex int
+	var sTemp string
 
+	var bSaidItOnce bool = false
 
 	for {
 
-		sJSONData = <- ChanBrowserRequests
+		sJSONData = <- ChannelBrowserData
+
+		//fmt.Println("3a. Skipping->", sJSONData)
+		//sJSONData = <- ChannelBrowserData
+		//fmt.Println("3b. Processing->", sJSONData)
+
+		// these are generated every 30 seconds...
+		iJSONIndex = strings.Index(sJSONData, "JSON Sent:")
+		if iJSONIndex != -1 {
+
+			sTemp = fmt.Sprintf(" %d", iJSONMessagesSent)
+
+			//fmt.Println("Found It!->", sJSONData, "Adding", sTemp)
+
+			iJSONIndex += 10
+
+			sJSONData = sJSONData[:iJSONIndex] + sTemp + sJSONData[iJSONIndex:]
+
+			//fmt.Println("3d.", sJSONData)
+
+			iJSONMessagesSent = 0
+		}
 
 		if bFirstTime == true {
 			fmt.Println(sPlace, "Processing JSON Messages...")
@@ -427,15 +475,11 @@ func SendDataToWebServer(ChanBrowserRequests <-chan string) {
 		}
 
 
-		var bFoundConnection bool = false
-
 		for iWebConIdx := range webConnections {
 			iCount++
 
 			// is the connection active, if not, go to the next item in the loop
 			if webConnections[iWebConIdx].iStatus == 2 {
-
-				bFoundConnection = true
 
 				if webConnections[iWebConIdx].iSentMessage == 0 {
 					fmt.Println(sPlace, "Sending Data To->", webConnections[iWebConIdx].sIP, ":", webConnections[iWebConIdx].iPort, "<-")
@@ -453,14 +497,22 @@ func SendDataToWebServer(ChanBrowserRequests <-chan string) {
 			}
 		}
 
-		if bFoundConnection == false {
-			if len(ChanBrowserRequests) > MAX_CHANNELS {
-				fmt.Println(sPlace, "There are no Browser Connections.  Draining The Channel!")
 
-				for len(ChanBrowserRequests) > 0 {
-					sJSONData = <-ChanBrowserRequests
+		if ActiveWebConnections() == false {
+
+			if len(ChannelBrowserData) > 0 {
+				if bSaidItOnce == false {
+					fmt.Println(sPlace, "There are no Browser Connections.  Draining The Web Channel!  Queue Depth: ", len(ChannelBrowserData))
+					bSaidItOnce = true
 				}
 			}
+
+			for len(ChannelBrowserData) > 0 {
+				sJSONData = <-ChannelBrowserData
+			}
+		} else {
+			bSaidItOnce = false
+			iJSONMessagesSent++
 		}
 
 

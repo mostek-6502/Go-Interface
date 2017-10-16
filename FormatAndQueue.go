@@ -29,6 +29,10 @@ import (
 	"strconv"
 )
 
+
+var MESSAGE_IDs = []string { "Header",
+							"Error_Message", }
+
 var EEPROM_IDs = []string { "Header",
 							"EEPROM_Version",
 							"EEPROM_RebootCount",
@@ -209,9 +213,34 @@ var mTemperatureStatus = map[string]string{
 							"99" : "Unknown", }
 
 var mWindAlert = map[string]string {
-						"0" : "OK",
-						"1" : "Caution",
-						"2" : "Alert", }
+							"0" : "OK",
+							"1" : "Caution",
+							"2" : "Alert", }
+
+var mPumpStatus = map[string]string {
+							"0" : "PUMP_NORMAL_OPERATIONS",
+							"1" : "PUMP_OFF",
+							"2" : "PUMP_TEMPERATURE_ERROR",
+							"3" : "PUMP_TEMPERATURE_TOO_LOW",
+							"4" : "PUMP_TEMPERATURE_TOO_HIGH",
+							"5" : "PUMP_TO_HOUSE_THERMOSTAT_OFF",
+							"6" : "PUMP_FAILSAFE_ERROR",
+							"7" : "PUMP_HOUSE_TEMPERATURE_ERROR",
+							"8" : "PUMP_HOUSE_TEMP_TOO_HIGH", }
+
+var mThermostatOn_Off = map[string]string {
+							"0" : "Off",
+							"1" : "On", }
+
+var mFailsafe = map[string]string {
+							"0" : "Failed!",
+							"1" : "OK", }
+
+
+var mProximity = map[string]string {
+							"0" : "OK",
+							"1" : "Limit!", }
+
 
 
 //  print('event: message\n' + 'data: {"Element" : "EEPROM_RebootCount", "Data" : ' + '"' + str(iCount) + '"' + '}\n\n')
@@ -249,6 +278,29 @@ func Process_EEPROM_Data(sData string, aID []string) []string {
 }
 
 
+func Process_Data_Message(sData string, aID []string) [] string {
+
+	var sElement, sTemp string
+	asReturn := make([]string, 0, 100)
+
+	sSplit := strings.Split(sData, ",")
+
+	for iIndex := 0; iIndex < len(MESSAGE_IDs); iIndex++ {
+		sTemp = strings.TrimSpace(sSplit[iIndex])
+
+		sElement = Format_JSON_String(aID[iIndex], sTemp)
+
+		//println("2. Format->", sElement)
+
+		asReturn = append(asReturn, sElement)
+	}
+
+	return asReturn
+
+
+}
+
+
 func Process_Pump_Data(sData string, aID []string) []string {
 
 	var sElement, sTemp string
@@ -258,7 +310,16 @@ func Process_Pump_Data(sData string, aID []string) []string {
 	sSplit := strings.Split(sData, ",")
 
 	for iIndex := 0; iIndex < len(PUMP_IDs); iIndex++ {
+
 		sTemp = strings.TrimSpace(sSplit[iIndex])
+
+		if iIndex == 1 {
+			sTemp = mThermostatOn_Off[sTemp]
+		} else if iIndex == 2 || iIndex == 4 || iIndex == 6 || iIndex == 8 {
+			sTemp = sTemp + "%"
+		} else if iIndex == 3 || iIndex == 5 || iIndex == 7 || iIndex == 9 {
+			sTemp = mPumpStatus[sTemp]
+		}
 
 		sElement = Format_JSON_String(aID[iIndex], sTemp)
 
@@ -300,20 +361,12 @@ func Process_Sensor_Data(sData string, aID []string) []string {
 				asReturn = append(asReturn, sElement)
 			}
 		} else if iIndex == 3 {
-			if sTemp == "0" {
-				sTemp = "OK"
-			} else if sTemp == "1" {
-				sTemp = "Failed!"
-			}
+			sTemp = mFailsafe[sTemp]
 
 			sElement = Format_JSON_String(aID[iIndex], sTemp)		// Failsafe
 			asReturn = append(asReturn, sElement)
-		} else {
-			if sTemp == "0" {
-				sTemp = "OK"
-			} else if sTemp == "1" {
-				sTemp = "Limit"
-			}
+		} else {													// The rest of these are proximities
+			sTemp = mProximity[sTemp]
 
 			sElement = Format_JSON_String(aID[iIndex], sTemp)
 			asReturn = append(asReturn, sElement)
@@ -355,6 +408,14 @@ func Process_Data_RunTime(sData string, aID []string) []string {
 	var iTempCycles int
 	var iPumpCycles int
 
+	var sDays string
+
+	var iSeconds int
+	var iMinutes int
+	var iHours int
+	var iDays int
+
+
 	var sElement, sTemp string
 	asReturn := make([]string, 0, 100)
 
@@ -364,22 +425,55 @@ func Process_Data_RunTime(sData string, aID []string) []string {
 
 	// we are subtracting 2 because the data does not support 2 more elements, only the computed output...
 	for iIndex := 0; iIndex < len(RUNTIME_IDs) - 2; iIndex++ {
+
+		//iDays := 0
+		//if (iTime > 86400) {
+		//	iDays = iTime / 86400;  // number of days.
+		//	iTime = iTime % 86400;  // remainder after "subtracting" out days
+		//}
+		//String strLapsedTime = String.format("%d %02d:%02d:%02d", iDays, iTime / 3600, (iTime / 60) % 60, iTime % 60);
+
 		sTemp = strings.TrimSpace(sSplit[iIndex])
+		if iIndex == 1 {  // this is the Duration in Seconds that the Board has been up
 
-		sElement = Format_JSON_String(aID[iIndex], sTemp)
+			// this needs to be cleaned up
+			iSeconds, _ = strconv.Atoi(sTemp)
+			iUpTime = iSeconds
 
-		asReturn = append(asReturn, sElement)
+			iDays = iSeconds / 86400
+			iHours = (iSeconds - (iDays * 86400)) / 3600
+			iMinutes = (iSeconds - ((iDays * 86400) + (iHours * 3600))) / 60
 
-		if iIndex == 1 { iUpTime, _ = strconv.Atoi(sTemp) }
-		if iIndex == 2 { iTempCycles, _ = strconv.Atoi(sTemp) }
-		if iIndex == 4 { iPumpCycles, _ = strconv.Atoi(sTemp) }
+			if len(sDays) == 0 {
+				sTemp = fmt.Sprintf( "%02d:%02d:%02d", iHours, iMinutes, iSeconds % 60)
+			} else {
+				sTemp = fmt.Sprintf("%d.%02d:%02d:%02d", iDays, iHours, iMinutes, iSeconds % 60)
+			}
+
+			sElement = Format_JSON_String(aID[iIndex], sTemp)
+			asReturn = append(asReturn, sElement)
+		} else {
+
+			sElement = Format_JSON_String(aID[iIndex], sTemp)
+			asReturn = append(asReturn, sElement)
+
+			if iIndex == 2 {
+				iTempCycles, _ = strconv.Atoi(sTemp)
+			} else if iIndex == 4 {
+				iPumpCycles, _ = strconv.Atoi(sTemp)
+			}
+		}
 	}
 
 	var iIndex int
 	var f float64
 	var s64 string
 
-	f = (float64) (iTempCycles / iUpTime)
+	if iUpTime > 0 {
+		f = (float64)(iTempCycles / iUpTime)
+	} else {
+		f = 0.0
+	}
 	s64 = strconv.FormatFloat(f, 'f', 2, 64)
 
 	iIndex = 11
@@ -387,8 +481,11 @@ func Process_Data_RunTime(sData string, aID []string) []string {
 	asReturn = append(asReturn, sElement)
 
 
-
-	f = (float64) (iPumpCycles / iUpTime)
+	if iUpTime > 0 {
+		f = (float64)(iPumpCycles / iUpTime)
+	} else {
+		f = 0.0
+	}
 	s64 = strconv.FormatFloat(f, 'f', 2, 64)
 
 	iIndex = 12
@@ -495,7 +592,7 @@ func Process_Temp_Data(sData string, aID []string) []string {
 
 
 
-func FormatAndQueueData(ChanChannelData <-chan string, ChanBrowserRequests chan<- string) {
+func FormatAndQueueData(ChannelBoardData <-chan string, ChannelBrowserData chan<- string) {
 
 	var sPlace string = "FormatAndQueueData()"
 
@@ -510,7 +607,17 @@ func FormatAndQueueData(ChanChannelData <-chan string, ChanBrowserRequests chan<
 
 	for {
 
-		sData = <- ChanChannelData
+		if ActiveWebConnections() == false {
+			if len(ChannelBoardData) > 0 {
+				fmt.Println(sPlace, "There are no Browser Connections.  Draining The Board Channel!  Queue Depth: ", len(ChannelBoardData))
+
+				for len(ChannelBoardData) > 0 {
+					sData = <-ChannelBoardData
+				}
+			}
+		}
+
+		sData = <- ChannelBoardData
 
 		if bFirstTime == true {
 			fmt.Println(sPlace, "Processing Board Data...")
@@ -531,6 +638,8 @@ func FormatAndQueueData(ChanChannelData <-chan string, ChanBrowserRequests chan<
 			sFormattedData = Process_Temp_Data(sData, TEMP_IDs)
 		} else if strings.Contains(sData, "RUNTIME ") {
 			sFormattedData = Process_Data_RunTime(sData, RUNTIME_IDs)
+		} else if strings.Contains(sData, "MESSAGE ") {
+			sFormattedData = Process_Data_Message(sData, MESSAGE_IDs)
 		} else {
 			bOK = false
 			fmt.Println(sPlace, "Unrecognized Header from Board Data ->", sData, "<-")
@@ -538,26 +647,20 @@ func FormatAndQueueData(ChanChannelData <-chan string, ChanBrowserRequests chan<
 
 
 		if bOK == true {
-			// This is the same as the BoardData channel...
-			// The problem with this is this...  once we go into a 'full' state here,
-			// we can can easily begin dropping incoming board data.  This is an issue.
-			// However, if we do not do this, we will the fill channel and ignore data anyway
-			// By doing it this way, a full message is accepted.  Various whole messages
-			// may get dropped by the O/S.  Since the data is not critical, some data loss
-			// is expected.
+			for iIndex := range sFormattedData {
+				sTemp := sFormattedData[iIndex]
 
-			for _, sData := range sFormattedData {
+				//fmt.Println(sPlace, "2b. Data To Channel->", sTemp, "<-")
 
-				for len(ChanBrowserRequests) >= MAX_CHANNELS {
-					time.Sleep(time.Millisecond)
-				}
-
-				ChanBrowserRequests <- sData
+				ChannelBrowserData <- sTemp
 			}
 
-
-			sFormattedData = nil
+			// testing purposes only...
+			//s := Format_JSON_String("Error_Message", "Really Really REALLY Bad Error! (just testing)")
+			//ChannelBrowserData <- s
 		}
+
+		sFormattedData = nil
 
 		time.Sleep(time.Millisecond)
 	}
